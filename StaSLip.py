@@ -8,6 +8,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+
+#Import CSI libraries
+import csi.insar as ir
+import csi.gps   as gr
+import csi.tsunami    as tsunami
+import csi.seismic    as seis
+
 #------------------------------------------------------------------
 #------------------------------------------------------------------
 # Load Arguments
