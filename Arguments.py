@@ -10,3 +10,4 @@ from glob import glob
 
 gps_dir = '../DATA/GNSS'
 
+print('tete')
