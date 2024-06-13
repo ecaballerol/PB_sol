@@ -9,3 +9,5 @@ from glob import glob
 #DATA dir
 
 gps_dir = '../DATA/GNSS'
+
+print('ok')
