@@ -9,11 +9,16 @@ import matplotlib.pyplot as plt
 import os
 
 
-#Import CSI libraries
+#Import CSI libraries Data
 import csi.insar as ir
 import csi.gps   as gr
 import csi.tsunami    as tsunami
 import csi.seismic    as seis
+
+#Import CSI libraries Fault
+import csi.RectangularPatchesKin as rectangular_fault # Use only for kinematic modeling
+import csi.multifaultsolve as multiflt
+import csi.geodeticplot as geoplt
 
 #------------------------------------------------------------------
 #------------------------------------------------------------------
