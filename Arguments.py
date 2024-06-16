@@ -8,6 +8,11 @@ from glob import glob
 #Define the UTM
 utmzone = 19
 
+#Set Preliminar Hypocenter
+lat_hypo = -31.637
+lon_hypo = -71.741
+dep_hypo =  23.3
+
 #DATA dir
 
 gps_dir = '../DATA/GNSS'
@@ -22,3 +27,7 @@ FaultGeo = {'length':300,'width':180,\
             'strike':4,'dip':22,\
             'n_strike':10,'n_dip':10,\
             'grid_size':2}
+
+
+comp_GFs    = True
+GFdir       = './GFs' # Green's function directory
