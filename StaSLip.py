@@ -135,7 +135,8 @@ fault.assembleGFs(data_avail,slipdir='sd',polys=None)
 fault.assembled(data_avail)
 fault.assembleCd(data_avail)
 
-fault.buildCm(sigma=10.0,lam= 30.0) #See Radiguet et al., 2010
+fault.buildCm(sigma=10.0,lam= 20.0) #See Radiguet et al., 2010
+#fault.buildCm(sigma=10.0,lam= 30.0) #See Radiguet et al., 2010
 
 # Assemble the problem
 slv = multiflt('FastInv', [fault])
@@ -166,6 +167,10 @@ slv.distributem()
 np.savetxt('static_LSQ.txt',slv.mpost)    
 
 
+# Compute predictions
+for dataset in data_avail:
+    dataset.buildsynth(slv.faults)
+
 # %%
 # Plot arguments
 if plot_figs:
@@ -178,8 +183,8 @@ if plot_figs:
         gp.setzaxis(depth=50,zticklabels=None)
     # Plot gps data/predictions
         if idata.dtype == 'gps':
-            gp.gps(idata,scale=5.,legendscale=1,data=['data'],color=['k','b'])
-            gp.gpsverticals(idata,data=['data'],markersize=[100,30],norm=[-0.3,0.3],cbaxis=[0.7, 0.2, 0.1, 0.02])
+            gp.gps(idata,scale=5.,legendscale=1,data=['data','synth'],color=['k','b'])
+            gp.gpsverticals(idata,data=['data','synth'],markersize=[100,30],norm=[-0.3,0.3],cbaxis=[0.7, 0.2, 0.1, 0.02])
         gp.carte.coastlines()
         gp.carte.plot(fault.hypo_lon,fault.hypo_lat,'*k',ms=13,zorder=5)
         title= idata.name + ' fit'
