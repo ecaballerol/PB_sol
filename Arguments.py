@@ -17,17 +17,25 @@ dep_hypo =  23.3
 
 gps_dir = '../DATA/GNSS'
 
-print('tete')
-
 #+++++++++++++++++++++++++
 # Fault Geometry Parameters
-
-TopEdge = {'lon': -72.419,'lat':-32.25,'depth':10} 
-FaultGeo = {'length':300,'width':180,\
-            'strike':4,'dip':22,\
+strike = 4
+dip = 22
+FaultGeo = {'length':320,'width':180,\
+            'strike':strike,'dip':dip,\
             'n_strike':10,'n_dip':10,\
             'grid_size':2}
+#if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
+Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
+Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
+#elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
+#    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
+#    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
 
+TopEdge = {'lon': Toplon,'lat':Toplat,'depth':10} 
 
 comp_GFs    = True
 GFdir       = './GFs' # Green's function directory
+VelModel = 'okada'
+
+plot_figs   = True

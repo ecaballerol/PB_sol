@@ -32,14 +32,16 @@ from Arguments import *
 data_avail = []
 #We start with GNSS
 if os.listdir(gps_dir):
+    count =0
     for ifile in os.listdir(gps_dir):
         if ifile.endswith('.dat'):
             print('GNSS available')
-            GPS = gr('GPS',utmzone=utmzone)
+            GPS = gr('GPS' + str(count),utmzone=utmzone)
             GPSfile= os.path.join(gps_dir,ifile)
             GPS.read_from_enu(GPSfile,header=1)
             GPS.buildCd(direction='enu')
             data_avail.extend([GPS])
+            count +=1
 else:
     print('not GNSS available')
 
@@ -47,14 +49,17 @@ else:
 #Initialize fault object
 # Two approaches, either Initialize planar fault, either 
 #look for the geometry
+if os.listdir('../GEOMETRY'):
+    print('Not available Geometry')
+else:
+    print('Creating a planar fault')
+    # Initialize a planar fault
+    fault = planar_fault('EarSlInv', utmzone=utmzone)
 
-# Initialize a planar fault
-fault = planar_fault('EarSlInv', utmzone=utmzone)
-
-fault.buildFault(TopEdge['lon'],TopEdge['lat'],TopEdge['depth'],\
-                FaultGeo['strike'],FaultGeo['dip'],\
-                FaultGeo['length'],FaultGeo['width'],\
-                FaultGeo['grid_size'],FaultGeo['n_strike'],FaultGeo['n_dip'])
+    fault.buildFault(TopEdge['lon'],TopEdge['lat'],TopEdge['depth'],\
+                    FaultGeo['strike'],FaultGeo['dip'],\
+                    FaultGeo['length'],FaultGeo['width'],\
+                    FaultGeo['grid_size'],FaultGeo['n_strike'],FaultGeo['n_dip'])
 
 fault.setTrace(delta_depth=0.5)
 fault.computeArea()
@@ -103,11 +108,67 @@ for data in data_avail:  # Loop over datasets
 if comp_GFs == True: # Write GFs
     fault.saveGFs(outputDir=GFdir)
 
+# %%
+#Assemble the inverse problem
+
 #  Assemble GFs
 # fault.assembleGFs(static_datasets,slipdir='sd',polys=poly)
 fault.assembleGFs(data_avail,slipdir='sd',polys=None)
 
+# Assemble the datasets
+fault.assembled(data_avail)
+fault.assembleCd(data_avail)
+
+fault.buildCm(sigma=10.0,lam= 30.0) #See Radiguet et al., 2010
+
+# Assemble the problem
+slv = multiflt('FastInv', [fault])
+slv.assembleGFs()
+slv.assembleCm()
+
+# Write matrices to binary files for Altar
+slv.writeGFs2BinaryFile(outfile=os.path.join(GFdir,'static.gf'),dtype='d')
+slv.writeData2BinaryFile(outfile=os.path.join(GFdir,'static.data'),dtype='d')
+slv.writeCd2BinaryFile(outfile=os.path.join(GFdir,'static.Cd'),dtype='d', scale=1.0)
+slv.writePatchAreasFile(outfile=os.path.join(GFdir,'variableDip_patchAreas.dat'))
+
+# %%
+#First Slip Inversion
+
+# Slip boundaries
+bounds = []
+for i in range(fault.N_slip): # Along strike
+    bounds.append((-2.,2.))
+for i in range(fault.N_slip): # Along dip
+    bounds.append((0.,30.))
+
+# Inversion
+slv.ConstrainedLeastSquareSoln(bounds=bounds,method='L-BFGS-B',checkIter=True)
+# Distribute slip values in fault
+slv.distributem()
+# Write model in a text file
+np.savetxt('static_LSQ.txt',slv.mpost)    
 
 
+# %%
+# Plot arguments
+if plot_figs:
+    plt.close('all')
+    for idata in data_avail:
+    # Prepare figures
+        gp = geoplt(lonmin=-73,lonmax=-69,latmin=-33,latmax=-29,figsize=[(8,9),(8,9)])
+    # Plot dipslip
+        gp.faultpatches(fault, slip='dipslip', colorbar=True,plot_on_2d=True,alpha=0.6,cmap='Reds',cbaxis=[0.7, 0.4, 0.1, 0.02])
+        gp.setzaxis(depth=50,zticklabels=None)
+    # Plot gps data/predictions
+        if idata.dtype == 'gps':
+            gp.gps(idata,scale=5.,legendscale=1,data=['data'],color=['k','b'])
+            gp.gpsverticals(idata,data=['data'],markersize=[100,30],norm=[-0.3,0.3],cbaxis=[0.7, 0.2, 0.1, 0.02])
+        gp.carte.coastlines()
+        gp.carte.plot(fault.hypo_lon,fault.hypo_lat,'*k',ms=13,zorder=5)
+        title= idata.name + 'fit'
+        gp.titlemap(title)
+        gp.faille.set_title('Slip')
+    gp.show()
 
 # %%
