@@ -51,12 +51,14 @@ else:
 #look for the geometry
 if GeometryFile is True:
     for ifile in os.listdir(fault_dir):
-        # Initialize a vertical shallow fault
-        fault = rectangular_fault('Illapel_2015', utmzone=utmzone)
+        # Initialize a fault from txt
+        fault = rectangular_fault('EarSlinv', utmzone=utmzone)
 
         # Get the fault patches from gocad
         fault.read3DsquareGrid(os.path.join(fault_dir,ifile))
-        print('Not available Geometry')
+        
+        #fault.initializeslip()
+        fault.initializekinmodel()
 else:
     print('Creating a planar fault')
     #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
