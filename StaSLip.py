@@ -36,7 +36,7 @@ if os.listdir(gps_dir):
     for ifile in os.listdir(gps_dir):
         if ifile.endswith('.dat'):
             print('GNSS available')
-            GPS = gr('GPS' + str(count),utmzone=utmzone)
+            GPS = gr('GPS, dataset: ' + str(count),utmzone=utmzone)
             GPSfile= os.path.join(gps_dir,ifile)
             GPS.read_from_enu(GPSfile,header=1)
             GPS.buildCd(direction='enu')
@@ -67,7 +67,8 @@ else:
     #elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
 #    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
 #    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
-
+    TopEdge['lon']=Toplon
+    TopEdge['lat']=Toplat
     # Initialize a planar fault
     fault = planar_fault('EarSlInv', utmzone=utmzone)
 
@@ -181,7 +182,7 @@ if plot_figs:
             gp.gpsverticals(idata,data=['data'],markersize=[100,30],norm=[-0.3,0.3],cbaxis=[0.7, 0.2, 0.1, 0.02])
         gp.carte.coastlines()
         gp.carte.plot(fault.hypo_lon,fault.hypo_lat,'*k',ms=13,zorder=5)
-        title= idata.name + 'fit'
+        title= idata.name + ' fit'
         gp.titlemap(title)
         gp.faille.set_title('Slip')
     gp.show()
