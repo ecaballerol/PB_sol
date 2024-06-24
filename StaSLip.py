@@ -61,9 +61,9 @@ if GeometryFile is True:
         fault.initializekinmodel()
 else:
     print('Creating a planar fault')
-    #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
-    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
-    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
+    if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
+        Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
+        Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
     #elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
 #    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
 #    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
