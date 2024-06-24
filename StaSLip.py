@@ -63,9 +63,9 @@ else:
     print('Creating a planar fault')
     if FaultGeo['strike'] >= 360:
         FaultGeo['strike'] = FaultGeo['strike'] -  360
-    if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
-        Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
-        Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
+    #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
+    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
+    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
     #elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
 #    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
 #    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
@@ -179,7 +179,7 @@ if plot_figs:
     plt.close('all')
     for idata in data_avail:
     # Prepare figures
-        gp = geoplt(lonmin=-73,lonmax=-69,latmin=-33,latmax=-29,figsize=[(8,9),(8,9)])
+        gp = geoplt(lonmin=lon_hypo-2,lonmax=lon_hypo+2,latmin=lat_hypo-2.5,latmax=lat_hypo+2.5,figsize=[(8,9),(8,9)])
     # Plot dipslip
         gp.faultpatches(fault, slip='dipslip', colorbar=True,plot_on_2d=True,alpha=0.6,cmap='Reds',cbaxis=[0.7, 0.4, 0.1, 0.02])
         gp.setzaxis(depth=50,zticklabels=None)
