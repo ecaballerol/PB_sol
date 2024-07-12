@@ -1,0 +1,14 @@
+# To ensure app dependencies are ported from your virtual environment/host machine into your container, run 'pip freeze > requirements.txt' in the terminal to overwrite this file
+shapely
+pyproj
+matplotlib
+cartopy
+h5py
+multiprocess
+ipython
+spicy
+pandas
+netCDF4
+pymc
+fastapi
+uvicorn
