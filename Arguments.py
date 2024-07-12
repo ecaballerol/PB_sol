@@ -13,13 +13,16 @@ lat_hypo = -31.637
 lon_hypo = -71.741
 dep_hypo =  23.3
 
+#+++++++++++++++++++++++++++++++++++
 #DATA dir
+gps_dir = './DATA/GNSS'
+insar_dir = './DATA/INSAR'
+exlude_distance = 150
 
-gps_dir = '../DATA/GNSS'
 
 #+++++++++++++++++++++++++
 # Fault Geometry Parameters
-GeometryFile = True
+GeometryFile = False
 fault_dir = '../GEOMETRY'
 
 strike = 4
