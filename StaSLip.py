@@ -27,24 +27,6 @@ import csi.planarfaultkinematic as planar_fault
 # Load Arguments
 from Arguments import *
 
-#%%
-#Searching and loading Available DATA
-data_avail = []
-#We start with GNSS
-if os.listdir(gps_dir):
-    count =0
-    for ifile in os.listdir(gps_dir):
-        if ifile.endswith('.dat'):
-            print('GNSS available')
-            GPS = gr('GPS, dataset: ' + str(count),utmzone=utmzone)
-            GPSfile= os.path.join(gps_dir,ifile)
-            GPS.read_from_enu(GPSfile,header=1)
-            GPS.buildCd(direction='enu')
-            data_avail.extend([GPS])
-            count +=1
-else:
-    print('not GNSS available')
-
 # %%
 #Initialize fault object
 # Two approaches, either Initialize planar fault, either 
@@ -67,8 +49,6 @@ else:
     Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
     Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
     #elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
-#    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
-#    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
     TopEdge['lon']=Toplon
     TopEdge['lat']=Toplat
     # Initialize a planar fault
@@ -89,6 +69,48 @@ fault.setHypoXY(lon_hypo,lat_hypo,UTM=False) # Hypocenter (for preliminar soluti
 #See if we define the Mu for EDKS
 
 print('NUMPATCH : ', len(fault.patch))
+
+
+#%%
+#Searching and loading Available DATA
+data_avail = []
+#We start with GNSS
+if os.listdir(gps_dir):
+    count =0
+    for ifile in os.listdir(gps_dir):
+        if ifile.endswith('.dat'):
+            print('GNSS available')
+            GPS = gr('GPS, dataset: ' + str(count),utmzone=utmzone)
+            GPSfile= os.path.join(gps_dir,ifile)
+            GPS.read_from_enu(GPSfile,header=1)
+            
+            if exlude_distance is not None:
+                print('Excluding stations further than: ' + str(exlude_distance))
+                GPS.reject_stations_awayfault(exlude_distance, fault)
+            GPS.buildCd(direction='enu')
+            data_avail.extend([GPS])
+            count +=1
+else:
+    print('not GNSS available')
+
+#InSAR directory
+if os.path.isdir(insar_dir):
+    if os.listdir(insar_dir):
+        count =0
+        for ifile in os.listdir(insar_dir):
+            if ifile.endswith('.rsp'):
+                print('INSAR available')
+                InSAR = ir('INSAR, dataset: ' + str(count),utmzone=utmzone)
+                InSARfile= os.path.join(insar_dir,ifile)
+                InSAR.read_from_varres(InSARfile,header=1)
+                InSAR.buildCd(sigma=1,lam=1)
+                data_avail.extend([InSAR])
+                count +=1
+    else:
+        print('not file found')
+else:
+    print('not InSAR available')
+
 
 
 # %%
