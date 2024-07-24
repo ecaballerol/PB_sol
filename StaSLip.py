@@ -155,8 +155,10 @@ for data in data_avail:  # Loop over datasets
         if data.dtype == 'tsunami':
             G_SS,G_DS = dart.getGF(dart_wav,fault,factor=0.01)
             fault.setGFs(data,strikeslip=[G_SS],dipslip=[G_DS])
-        else:            
+        elif data.dtype == 'gps':            
             fault.buildGFs(data,method=VelModel,vertical=enu)
+        else:
+            fault.buildGFs(data,method=VelModel)
 
     else: # Load GFs
         GfSS = os.path.join(GFdir,'{}_{}_{}.gf'.format(fault.name, data.name, 'SS'))
@@ -167,7 +169,7 @@ for data in data_avail:  # Loop over datasets
             G_SS,G_DS = dart.getGF(dart_wav,fault,factor=0.01)
             fault.setGFs(data,strikeslip=[G_SS],dipslip=[G_DS])
         else:
-            fault.setGFsFromFile(data,strikeslip=GfSS,dipslip=GfDS,vertical=enu)
+            fault.setGFsFromFile(data,strikeslip=GfSS,dipslip=GfDS,vertical=True)
 
 # # Write Green's functions
 if comp_GFs == True: # Write GFs
@@ -218,7 +220,10 @@ np.savetxt('static_LSQ.txt',slv.mpost)
 
 # Compute predictions
 for dataset in data_avail:
-    dataset.buildsynth(slv.faults,vertical=enu)
+    if dataset.dtype == 'gps':
+        dataset.buildsynth(slv.faults,vertical=enu)
+    else:
+        dataset.buildsynth(slv.faults)
 
 # %%
 # Plot arguments
