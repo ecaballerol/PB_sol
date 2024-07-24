@@ -12,13 +12,14 @@ utmzone = 19
 lat_hypo = -31.637
 lon_hypo = -71.741
 dep_hypo =  23.3
-
+M0_est = 8.3
 #+++++++++++++++++++++++++++++++++++
 #DATA dir
 gps_dir = './DATA/GNSS'
+enu = True
 insar_dir = './DATA/INSAR'
-exlude_distance = 150
-
+exclude_distance = None
+gps_factor = 1
 
 #+++++++++++++++++++++++++
 # Fault Geometry Parameters
@@ -27,12 +28,11 @@ fault_dir = '../GEOMETRY'
 
 strike = 4
 dip = 22
-FaultGeo = {'length':320,'width':180,\
-            'strike':strike,'dip':dip,\
-            'n_strike':10,'n_dip':10,\
+FaultGeo = {'strike':strike,'dip':dip,\
+            'n_strike':10,'n_dip':5,\
             'grid_size':2}
 
-TopEdge = {'depth':10} 
+TopEdge = {'depth':5} 
 
 comp_GFs    = True
 GFdir       = './GFs' # Green's function directory

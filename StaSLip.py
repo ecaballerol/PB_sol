@@ -27,6 +27,22 @@ import csi.planarfaultkinematic as planar_fault
 # Load Arguments
 from Arguments import *
 
+def calcDim(Mest):
+    '''
+    Function to calculate the Area and width of an earthquake based on Wells et al. (1994)
+    length = extension along strike
+    width = extension along dip
+
+    '''
+    logStr = -2.44 + Mest * 0.59
+    logRA = -3.49 + Mest * 0.91
+    logDip = -1.01 + M0_est * 0.32
+    #We add 20 percent 
+    length = 1.2 * (10 ** logStr )
+    area = 1.2 * (10 ** logRA )
+    width = 1.6 * (10 ** logDip )
+    return area, length, width
+
 # %%
 #Initialize fault object
 # Two approaches, either Initialize planar fault, either 
@@ -45,6 +61,9 @@ else:
     print('Creating a planar fault')
     if FaultGeo['strike'] >= 360:
         FaultGeo['strike'] = FaultGeo['strike'] -  360
+    area,length,width = calcDim(M0_est)
+    FaultGeo['length']=length
+    FaultGeo['width'] = width
     #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
     Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
     Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
@@ -82,12 +101,18 @@ if os.listdir(gps_dir):
             print('GNSS available')
             GPS = gr('GPS, dataset: ' + str(count),utmzone=utmzone)
             GPSfile= os.path.join(gps_dir,ifile)
-            GPS.read_from_enu(GPSfile,header=1)
-            
-            if exlude_distance is not None:
-                print('Excluding stations further than: ' + str(exlude_distance))
-                GPS.reject_stations_awayfault(exlude_distance, fault)
-            GPS.buildCd(direction='enu')
+            if enu:
+                GPS.read_from_enu(GPSfile,header=1,factor=gps_factor)
+            else:
+                GPS.read_from_en(GPSfile,header=1,factor=gps_factor)
+
+            if exclude_distance is not None:
+                print('Excluding stations further than: ' + str(exclude_distance))
+                GPS.reject_stations_awayfault(exclude_distance, fault)
+            if enu:
+                GPS.buildCd(direction='enu')
+            else:
+                GPS.buildCd(direction='en')
             data_avail.extend([GPS])
             count +=1
 else:
@@ -131,18 +156,18 @@ for data in data_avail:  # Loop over datasets
             G_SS,G_DS = dart.getGF(dart_wav,fault,factor=0.01)
             fault.setGFs(data,strikeslip=[G_SS],dipslip=[G_DS])
         else:            
-            fault.buildGFs(data,method=VelModel,vertical=True)
+            fault.buildGFs(data,method=VelModel,vertical=enu)
 
     else: # Load GFs
         GfSS = os.path.join(GFdir,'{}_{}_{}.gf'.format(fault.name, data.name, 'SS'))
         GfDS = os.path.join(GFdir,'{}_{}_{}.gf'.format(fault.name, data.name, 'DS'))
         if data.dtype == 'gps':
-            fault.setGFsFromFile(data,strikeslip=GfSS,dipslip=GfDS,vertical=True)
+            fault.setGFsFromFile(data,strikeslip=GfSS,dipslip=GfDS,vertical=enu)
         elif data.dtype == 'tsunami':
             G_SS,G_DS = dart.getGF(dart_wav,fault,factor=0.01)
             fault.setGFs(data,strikeslip=[G_SS],dipslip=[G_DS])
         else:
-            fault.setGFsFromFile(data,strikeslip=GfSS,dipslip=GfDS,vertical=False)
+            fault.setGFsFromFile(data,strikeslip=GfSS,dipslip=GfDS,vertical=enu)
 
 # # Write Green's functions
 if comp_GFs == True: # Write GFs
@@ -193,7 +218,7 @@ np.savetxt('static_LSQ.txt',slv.mpost)
 
 # Compute predictions
 for dataset in data_avail:
-    dataset.buildsynth(slv.faults)
+    dataset.buildsynth(slv.faults,vertical=enu)
 
 # %%
 # Plot arguments
