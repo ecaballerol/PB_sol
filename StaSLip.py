@@ -231,10 +231,10 @@ if plot_figs:
     plt.close('all')
     for idata in data_avail:
     # Prepare figures
-        gp = geoplt(lonmin=lon_hypo-2,lonmax=lon_hypo+2,latmin=lat_hypo-2.5,latmax=lat_hypo+2.5,figsize=[(8,9),(8,9)])
+        gp = geoplt(lonmin=lon_hypo-1.5,lonmax=lon_hypo+1.5,latmin=lat_hypo-2.,latmax=lat_hypo+2.,figsize=[(8,9),(8,9)])
     # Plot dipslip
         gp.faultpatches(fault, slip='dipslip', colorbar=True,plot_on_2d=True,alpha=0.6,cmap='Reds',cbaxis=[0.7, 0.4, 0.1, 0.02])
-        gp.setzaxis(depth=50,zticklabels=None)
+        gp.setzaxis(depth=int(fault.depth*1.3),zticklabels=None)
     # Plot gps data/predictions
         if idata.dtype == 'gps':
             gp.gps(idata,scale=5.,legendscale=1,data=['data','synth'],color=['k','b'])
