@@ -126,9 +126,9 @@ if os.path.isdir(insar_dir):
             if ifile.endswith('.rsp'):
                 print('INSAR available')
                 InSAR = ir('INSAR, dataset: ' + str(count),utmzone=utmzone)
-                InSARfile= os.path.join(insar_dir,ifile)
-                InSAR.read_from_varres(InSARfile,header=1)
-                InSAR.buildCd(sigma=1,lam=1)
+                InSARfile= os.path.join(insar_dir,os.path.splitext(ifile)[0])
+                InSAR.read_from_varres(InSARfile,factor=0.01,step=0,header=2,cov=False)
+                InSAR.buildCd(sigma=0.00605,lam=7.750)
                 data_avail.extend([InSAR])
                 count +=1
     else:
@@ -239,6 +239,8 @@ if plot_figs:
         if idata.dtype == 'gps':
             gp.gps(idata,scale=5.,legendscale=1,data=['data','synth'],color=['k','b'])
             gp.gpsverticals(idata,data=['data','synth'],markersize=[100,30],norm=[-0.3,0.3],cbaxis=[0.7, 0.2, 0.1, 0.02])
+        elif idata.dtype=='insar':
+            gp.insar(idata,data='res',plotType='decimate',colorbar=True,alpha=0.7)
         gp.carte.coastlines()
         gp.carte.plot(fault.hypo_lon,fault.hypo_lat,'*k',ms=13,zorder=5)
         title= idata.name + ' fit'

@@ -17,9 +17,11 @@ M0_est = 8.3
 #DATA dir
 gps_dir = './DATA/GNSS'
 enu = True
-insar_dir = './DATA/INSAR'
 exclude_distance = None
-gps_factor = 1
+gps_factor = 1 #1e-3 in case of gps in mmm
+
+insar_dir = './DATA/INSAR'
+
 
 #+++++++++++++++++++++++++
 # Fault Geometry Parameters
