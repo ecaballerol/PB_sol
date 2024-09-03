@@ -36,7 +36,7 @@ def calcDim(Mest):
     '''
     logStr = -2.44 + Mest * 0.59
     logRA = -3.49 + Mest * 0.91
-    logDip = -1.01 + M0_est * 0.32
+    logDip = -1.01 + Mest * 0.32
     #We add 20 percent 
     length = 1.2 * (10 ** logStr )
     area = 1.2 * (10 ** logRA )
