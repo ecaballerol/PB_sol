@@ -69,9 +69,12 @@ else:
     area,length,width = calcDim(M0_est)
     FaultGeo['length']=length
     FaultGeo['width'] = width
+    zsup = (width/2) * np.sin(np.deg2rad(dip))
+    ztop = dep_hypo - zsup
+    TopEdge = {'depth':ztop} 
     #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
-    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike)))/111 
-    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike)))/111 
+    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike))*np.cos(np.deg2rad(dip)))/111 
+    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike))*np.cos(np.deg2rad(dip)))/111 
     #elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
     TopEdge['lon']=Toplon
     TopEdge['lat']=Toplat
@@ -84,6 +87,7 @@ else:
                     FaultGeo['grid_size'],FaultGeo['n_strike'],FaultGeo['n_dip'],leading='dip')
     Nstrike = fault.f_nstrike
     Ndip = fault.f_ndip
+
 fault.setTrace(delta_depth=0.5)
 fault.computeArea()
 fault.trace2ll()
@@ -174,7 +178,11 @@ if os.listdir(seis_dir_sm):
         for l in f:
             items = l.strip().split()        
             sm_sac_files.append(join(seis_dir_sm,items[0]))
-            stdv = float(items[1])
+            if float(items[1]) < 1e-10:
+                stdv = float(items[1])
+            else:
+                stdv = 5.0e-4
+
             sm_seis_std.append(stdv)
     sm_data = seis('Strong_motion',utmzone=utmzone)
     sm_data.readSac(sm_sac_files)
@@ -271,8 +279,10 @@ for i in range(len(seismic_data)):
             waveInt=wm.WaveInt(earth_model,npts=1024,delta=1.,T0=-20.)
             data.initWaveInt(waveInt)
             print(data.name)
-            fault.buildKinGFs(data,35e9,0.,1.,rise_time=1,stf_type='dirac', out_type='V',filter_coef=sosfilter)
-            fault.buildKinGFs(data,35e9,90.,1.,rise_time=1,stf_type='dirac', out_type='V',filter_coef=sosfilter)
+            #fault.buildKinGFs(data,fault.mu,0.,1.,rise_time=1,stf_type='dirac', out_type='D')
+            #fault.buildKinGFs(data,fault.mu,90.,1.,rise_time=1,stf_type='dirac', out_type='D')
+            fault.buildKinGFs(data,fault.mu,0.,1.,rise_time=1,stf_type='dirac', out_type='D',filter_coef=sosfilter)
+            fault.buildKinGFs(data,fault.mu,90.,1.,rise_time=1,stf_type='dirac', out_type='D',filter_coef=sosfilter)
             # Save GFs
             fault.saveKinGFs(data,o_dir=GFdir)
   
@@ -304,8 +314,9 @@ fault.setBigDmap(data)
 if comp_bigG:
     #Add FastSweep
     fastSweep = wm.FastSweep()
-    tmin =fault.buildBigGD(fastSweep,seismic_data,[0.,90.],3.7,Ntriangles,Dtriangles,dtype='float32',\
-                           fastsweep=True,indexing='Altar')
+    tmin =fault.buildBigGD(fastSweep,seismic_data,[0.,90.],4.,Ntriangles,Dtriangles,dtype='float32',\
+                           fastsweep=False,indexing='Altar')
+    fault.buildBigCd(seismic_data)
 #Create the bigG for the kinematic problem
 
 #Create the Cd
@@ -355,9 +366,9 @@ if QuickInv:
         bounds = []
         for it in range(Ntriangles):
             for ip in range (Np):
-                bounds.append((-2,2))
+                bounds.append((-3,3))
             for ip in range (Np):
-                bounds.append((0.0,35.0))
+                bounds.append((0.0,5))
         maxfun = 10000
         iterations=500
         checkIter= True
@@ -367,8 +378,9 @@ if QuickInv:
         mprior = np.zeros((len(fault.patch)*Ntriangles*2,))
         checkNorm = True
         constraints = ()
-        res = minimize(costFunction, mprior,args=(G,D,mprior,iCd,checkNorm),constraints=constraints,method=method, bounds=bounds,
-               options=options)
+        # res = minimize(costFunction, mprior,args=(G,D,mprior,checkNorm),constraints=constraints,method=method, bounds=bounds,
+         #      options=options)
+        res = minimize(costFunction, mprior,args=(G,D,mprior,iCd,checkNorm),constraints=constraints,method=method, bounds=bounds,options=options)
         mpost = res.x
         figopt = 'constrain_'
 
@@ -430,12 +442,24 @@ plt.savefig(figurefile,bbox_inches='tight')
 plt.close()
 
 gp = geoplt(lonmin=lon_hypo-1.5,lonmax=lon_hypo+1.5,latmin=lat_hypo-2.,latmax=lat_hypo+2.,figsize=[(8,9),(8,9)]) 
-gp.faultpatches(fault, slip='total', colorbar=True,plot_on_2d=True,alpha=0.6,cmap='Reds',cbaxis=[0.7, 0.4, 0.1,0.02])
+gp.faultpatches(fault, slip='dipslip', colorbar=True,plot_on_2d=True,alpha=0.6,cmap='Reds',cbaxis=[0.7, 0.4, 0.1,0.02])
 gp.setzaxis(depth=int(fault.depth*1.3),zticklabels=None)
 gp.carte.plot(fault.hypo_lon,fault.hypo_lat,'*k',ms=13,zorder=5)
 gp.carte.coastlines()
+gp.savefig(prefix=title,mapaxis=None,triDaxis=None,saveFig=['map'],ftype='pdf')
+gp.savefig(prefix=title,mapaxis=None,triDaxis=None,saveFig=['fault'],ftype='pdf')
+n_ramp_param = 2
 
+#post = np.loadtxt('kinematicG.model') #with slip from static model and vr and tr fixed
+#post = np.loadtxt('kinematicG.final_mean') #with slip from static model and vr and
+fault.slip[:,0] = 0
+fault.slip[:,1] = 0
+fault.slip[15,1] = 1
+fault.tr = np.zeros(len(fault.patch))
+fault.tr[15] = 1
 
+eik_solver = wm.FastSweep()
+bigM = fault.castbigM(n_ramp_param,eik_solver,npt=Npt,Dtriangles=Dtriangles,grid_space=16/Nmesh)
 '''
 #  Assemble GFs
 # fault.assembleGFs(static_datasets,slipdir='sd',polys=poly)
