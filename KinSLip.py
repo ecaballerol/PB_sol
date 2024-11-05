@@ -96,7 +96,7 @@ fault.trace2ll()
 fault.setHypoXY(lon_hypo,lat_hypo,UTM=False) # Hypocenter (for preliminar solution.)
 
 #See if we define the Mu for EDKS
-
+fault.setMu(earth_model)
 print('NUMPATCH : ', len(fault.patch))
 
 # Set mapping
