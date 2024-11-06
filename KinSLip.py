@@ -96,6 +96,7 @@ fault.trace2ll()
 fault.setHypoXY(lon_hypo,lat_hypo,UTM=False) # Hypocenter (for preliminar solution.)
 
 #See if we define the Mu for EDKS
+# Set Mu
 fault.setMu(earth_model)
 print('NUMPATCH : ', len(fault.patch))
 
@@ -311,6 +312,9 @@ bigDfile = os.path.join(GFdir,'kinematicG.data.bin')
 bigGfile = os.path.join(GFdir,'kinematicG.gf.bin')
 fault.setBigDmap(data)
 
+
+
+#Create the bigG for the kinematic problem
 if comp_bigG:
     #Add FastSweep
     fastSweep = wm.FastSweep()
@@ -324,6 +328,10 @@ for i in range(len(seismic_data)):
     data = seismic_data[i]
     data.buildDiagCd(seis_std[i])
 fault.buildBigCd(seismic_data)
+
+fault.saveBigGD(bigDfile,bigGfile,dtype='float32')
+Cdfile = os.path.join(GFdir,'kinematicG.Cd.bin')
+fault.saveBigCd(bigCdfile = Cdfile, dtype='float32')
 #+++++++++++++++++++++++++++++++++++++++++++++
 #Quick inversion for big G
 # Define the cost function
