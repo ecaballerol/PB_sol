@@ -64,6 +64,9 @@ else:
     area,length,width = calcDim(M0_est)
     FaultGeo['length']=length
     FaultGeo['width'] = width
+    zsup = (width/2) * np.sin(np.deg2rad(dip))
+    ztop = dep_hypo - zsup
+    TopEdge = {'depth':ztop} 
     #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
     Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike))*np.cos(np.deg2rad(dip)))/111 
     Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike))*np.cos(np.deg2rad(dip)))/111 
@@ -76,7 +79,9 @@ else:
     fault.buildFault(TopEdge['lon'],TopEdge['lat'],TopEdge['depth'],\
                     FaultGeo['strike'],FaultGeo['dip'],\
                     FaultGeo['length'],FaultGeo['width'],\
-                    FaultGeo['grid_size'],FaultGeo['n_strike'],FaultGeo['n_dip'])
+                    FaultGeo['grid_size'],FaultGeo['n_strike'],FaultGeo['n_dip'],leading='dip')
+    Nstrike = fault.f_nstrike
+    Ndip = fault.f_ndip
 
 fault.setTrace(delta_depth=0.5)
 fault.computeArea()
@@ -86,9 +91,12 @@ fault.trace2ll()
 fault.setHypoXY(lon_hypo,lat_hypo,UTM=False) # Hypocenter (for preliminar solution.)
 
 #See if we define the Mu for EDKS
-
+# Set Mu
+fault.setMu(earth_model)
 print('NUMPATCH : ', len(fault.patch))
 
+# Set mapping
+fault.setFaultMap(Nstrike,Ndip,leading='dip',check_depth=True)
 
 #%%
 #Searching and loading Available DATA
