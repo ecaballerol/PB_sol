@@ -10,13 +10,14 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app/opt
 
 # Installing python dependencies pip requirements
-RUN conda create --name csi python=3.10 numpy
+RUN conda create --name csi python=3.10 numpy meson
 
 # #it works
 SHELL ["conda", "run", "-n", "csi", "/bin/bash", "-c"]
 
 RUN apt-get update && apt-get install -y \
     git \
+    vim \
     build-essential pkg-config libhdf5-serial-dev\
     && apt-get clean
 
@@ -25,14 +26,17 @@ RUN git clone https://github.com/jolivetr/okada4py.git
 
 # Change directory to the cloned repository
 WORKDIR /app/opt/okada4py
-# Install okada4py within the Conda environment
-#Running well
-RUN pip install .
-RUN mv /app/opt/okada4py/build/lib*/*.so .
+# # Install okada4py within the Conda environment
+# #Running well
+RUN meson setup builddir --prefix /app/opt/okada4py \
+&& meson compile -C builddir \
+&& meson install -C builddir \
+&& cp okada4py/* .
 
 WORKDIR /app/opt
-# Clone the okada4py repository
-RUN git clone https://github.com/jolivetr/csi.git
+# # Clone the okada4py repository
+RUN git clone https://github.com/jolivetr/csi.git \
+&& mv csi/csi/* csi/
 
 ENV PYTHONPATH=/app/opt
 
@@ -41,19 +45,18 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-#Copy the files to make the inversion
-COPY . /app
-
-
-
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
 RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-# CMD ["python", "StaSLip.py"]
+#Copy the files to make the inversion
+COPY . /app/workspace
+
+#RUN chown appuser /home/appuser
 
 # Set the default command to run a Python shell or your script
-CMD ["/bin/bash", "-c", "conda activate csi && exec bash"]
+CMD ["/bin/bash", "-c", "conda init && echo conda activate csi >> ~/.bashrc \
+&& exec bash && source activate csi"]
+
 
