@@ -66,15 +66,50 @@ else:
     print('Creating a planar fault')
     if FaultGeo['strike'] >= 360:
         FaultGeo['strike'] = FaultGeo['strike'] -  360
-    area,length,width = calcDim(M0_est)
+    #area,length,width = calcDim(M0_est)
+    fault = planar_fault('EarSlInv', utmzone=utmzone)
+    length = 44
+    width =  44
     FaultGeo['length']=length
     FaultGeo['width'] = width
-    zsup = (width/2) * np.sin(np.deg2rad(dip))
-    ztop = dep_hypo - zsup
+    dipdir = strike + 90
+
+    # hypocenter position inside fault
+    fd = 0.3   # down-dip fraction
+    fs = 0.5   # along-strike fraction
+    # -----------------------------
+    # DIP COMPONENT
+    # -----------------------------
+
+    ddip = fd * width
+    ztop = dep_hypo - ddip * np.sin(np.deg2rad(dip))
     TopEdge = {'depth':ztop} 
-    #if FaultGeo['strike'] >0 and FaultGeo['strike'] < 90:
-    Toplon = lon_hypo - (FaultGeo['width']/2 *np.cos(np.deg2rad(strike))*np.cos(np.deg2rad(dip)))/111 
-    Toplat = lat_hypo + (FaultGeo['width']/2 *np.sin(np.deg2rad(strike))*np.cos(np.deg2rad(dip)))/111 
+
+    h_dip = ddip * np.cos(np.deg2rad(dip))
+    dx_dip = -h_dip * np.cos(np.deg2rad(strike))
+    dy_dip =  h_dip * np.sin(np.deg2rad(strike))
+
+    # -----------------------------
+    # STRIKE COMPONENT
+    # -----------------------------
+
+    dstrike = fs * length * np.cos(np.deg2rad(dip))
+
+    dx_strike = -dstrike * np.cos(np.deg2rad(strike))
+    dy_strike = +dstrike * np.sin(np.deg2rad(strike))
+
+    # -----------------------------
+    # TOTAL SHIFT
+    # -----------------------------
+
+    dx =  dx_strike
+    dy = dy_strike
+    xx,yy=fault.ll2xy(lon_hypo,lat_hypo)
+    Topxx = xx + (dx )
+
+    Topyy = yy + (dy )
+
+    Toplon, Toplat = fault.xy2ll(Topxx,Topyy)
     #elif FaultGeo['strike']>=90 and FaultGeo['strike']<180:
     TopEdge['lon']=Toplon
     TopEdge['lat']=Toplat
